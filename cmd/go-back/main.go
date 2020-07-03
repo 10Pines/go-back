@@ -30,7 +30,7 @@ func main() {
 	}
 	close(cloneQueue)
 	wg.Wait()
-	log.Printf("Cloned %d cloneQueue", len(foundRepositories))
+	log.Printf("Cloned %d repos", len(foundRepositories))
 }
 
 func buildWorkerPool(config *Configuration) (*sync.WaitGroup, chan<- *gh.Repository) {
