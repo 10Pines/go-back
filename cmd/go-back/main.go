@@ -93,11 +93,29 @@ func cloneWorker(repositories <-chan *gh.Repository, auth *http.BasicAuth, wg *s
 	wg.Done()
 }
 
+func progress(ctx context.Context, name string) {
+	start := time.Now()
+	var now time.Time
+	for {
+		select {
+		case <-time.Tick(10 * time.Second):
+			now = time.Now()
+			log.Printf("[%s] is still ongoing: %.0fs and ticking", name, now.Sub(start).Seconds())
+		case <-ctx.Done():
+			return
+		}
+	}
+}
+
 func cloneRepo(repository *gh.Repository, auth *http.BasicAuth) error {
-	_, err := git.PlainClone(path.Join(".", "repos", repository.GetName()), false, &git.CloneOptions{
+	ctx := context.Background()
+	repositoryName := repository.GetName()
+	go progress(ctx, repositoryName)
+	_, err := git.PlainClone(path.Join(".", "repos", repositoryName), false, &git.CloneOptions{
 		URL:  repository.GetCloneURL(),
 		Auth: auth,
 	})
+	ctx.Done()
 	return err
 }
 
