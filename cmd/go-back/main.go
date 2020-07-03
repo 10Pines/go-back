@@ -9,30 +9,58 @@ import (
 	"log"
 	"os"
 	"path"
+	"strconv"
 	"sync"
 	"time"
 )
 
+type Configuration struct {
+	gitHubToken string
+	workerCount int
+}
+
 const OrganizationName = "10Pines"
 
 func main() {
-	ghToken, found := os.LookupEnv("GH_TOKEN")
+	config := buildConfiguration()
+	wg, cloneQueue := buildWorkerPool(config)
+	foundRepositories := getGithubRepos(config, OrganizationName)
+	for _, repository := range foundRepositories {
+		cloneQueue <- repository
+	}
+	close(cloneQueue)
+	wg.Wait()
+	log.Printf("Cloned %d cloneQueue", len(foundRepositories))
+}
+
+func buildWorkerPool(config *Configuration) (*sync.WaitGroup, chan<- *gh.Repository) {
+	auth := makeGithubAuth(config.gitHubToken)
+	wg := &sync.WaitGroup{}
+	repositories := make(chan *gh.Repository)
+	for i := 0; i < config.workerCount; i++ {
+		go cloneWorker(repositories, auth, wg)
+	}
+	return wg, repositories
+}
+
+func buildConfiguration() *Configuration {
+	token, found := os.LookupEnv("GH_TOKEN")
 	if !found {
 		log.Fatal("GH_TOKEN is missing")
 	}
-	auth := makeGithubAuth(ghToken)
-	wg := sync.WaitGroup{}
-	repositories := make(chan *gh.Repository)
-	for i := 0; i < 30; i++ {
-		go cloneWorker(repositories, auth, &wg)
+	workers, found := os.LookupEnv("WORKERS")
+	if !found {
+		workers = "10"
 	}
-	foundRepositories := getGithubRepos(ghToken, OrganizationName)
-	for _, repository := range foundRepositories {
-		repositories <- repository
+	workerCount, err := strconv.Atoi(workers)
+	if err != nil {
+		log.Fatalf("WORKERS is not a number: %s", workers)
 	}
-	close(repositories)
-	wg.Wait()
-	log.Printf("Cloned %d repositories", len(foundRepositories))
+
+	return &Configuration{
+		gitHubToken: token,
+		workerCount: workerCount,
+	}
 }
 
 func makeGithubAuth(token string) *http.BasicAuth {
@@ -42,14 +70,14 @@ func makeGithubAuth(token string) *http.BasicAuth {
 	}
 }
 
-func IsEmpty(repository *gh.Repository) bool {
+func isEmpty(repository *gh.Repository) bool {
 	return repository.GetSize() == 0
 }
 
-func cloneWorker(repositories chan *gh.Repository, auth *http.BasicAuth, wg *sync.WaitGroup) {
+func cloneWorker(repositories <-chan *gh.Repository, auth *http.BasicAuth, wg *sync.WaitGroup) {
 	wg.Add(1)
 	for repo := range repositories {
-		if IsEmpty(repo) {
+		if isEmpty(repo) {
 			log.Printf("Skipping Repo[%s] because it's empty", repo.GetName())
 			break
 		}
@@ -73,10 +101,10 @@ func cloneRepo(repository *gh.Repository, auth *http.BasicAuth) error {
 	return err
 }
 
-func getGithubRepos(token string, organizationName string) []*gh.Repository {
+func getGithubRepos(config *Configuration, organizationName string) []*gh.Repository {
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: token},
+		&oauth2.Token{AccessToken: config.gitHubToken},
 	)
 	tc := oauth2.NewClient(ctx, ts)
 	client := gh.NewClient(tc)
