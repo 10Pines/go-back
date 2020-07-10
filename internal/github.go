@@ -54,6 +54,7 @@ func fromGitHubRepositories(gitHubRepositories []*gh.Repository, gitHubAuth *htt
 			url:   ghRepo.GetCloneURL(),
 			empty: isEmpty(ghRepo),
 			auth:  gitHubAuth,
+			host: "GitHub",
 		})
 	}
 	return foundRepositories

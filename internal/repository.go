@@ -16,6 +16,7 @@ type Repository struct {
 	empty bool
 	auth  *http.BasicAuth
 	from  string
+	host  string
 }
 
 func BuildWorkerPool(config *Configuration) (*sync.WaitGroup, chan<- *Repository) {
@@ -64,7 +65,7 @@ func cloneRepo(repository *Repository) error {
 	ctx := context.Background()
 	repositoryName := repository.name
 	go progress(ctx, repositoryName)
-	_, err := git.PlainClone(path.Join(".", "repos", repositoryName), false, &git.CloneOptions{
+	_, err := git.PlainClone(path.Join("repos", repository.host, repositoryName), false, &git.CloneOptions{
 		URL:  repository.url,
 		Auth: repository.auth,
 	})

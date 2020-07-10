@@ -57,6 +57,7 @@ func fromGitlabProjects(gitLabProjects []*gl.Project, gitLabAuth *http.BasicAuth
 			url:   glProject.HTTPURLToRepo,
 			empty: false,
 			auth:  gitLabAuth,
+			host: "GitLab",
 		})
 	}
 	return foundRepositories
