@@ -33,7 +33,7 @@ func main() {
 	allRepositories := append(ghRepositories, glRepositories...)
 
 	wg, cloneQueue := MakeCloneWorkerPool(cloneConfig)
-	for _, repository := range allRepositories {
+	for _, repository := range allRepositories[:10] {
 		cloneQueue <- repository
 	}
 
