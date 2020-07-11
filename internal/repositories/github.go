@@ -1,4 +1,4 @@
-package internal
+package repositories
 
 import (
 	"context"
@@ -8,11 +8,11 @@ import (
 	"log"
 )
 
-func GetGithubRepos(config *Configuration, organizationName string) []*Repository {
-	gitHubAuth := makeGithubAuth(config)
+func GetGithubRepos(auths *Auths, organizationName string) []*Repository {
+	gitHubAuth := makeGithubAuth(auths)
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: config.gitHubToken},
+		&oauth2.Token{AccessToken: auths.GitHubToken},
 	)
 	tc := oauth2.NewClient(ctx, ts)
 	client := gh.NewClient(tc)
@@ -54,7 +54,7 @@ func fromGitHubRepositories(gitHubRepositories []*gh.Repository, gitHubAuth *htt
 			url:   ghRepo.GetCloneURL(),
 			empty: isEmpty(ghRepo),
 			auth:  gitHubAuth,
-			host: "GitHub",
+			host:  "GitHub",
 		})
 	}
 	return foundRepositories
@@ -64,9 +64,9 @@ func isEmpty(repository *gh.Repository) bool {
 	return repository.GetSize() == 0
 }
 
-func makeGithubAuth(configuration *Configuration) *http.BasicAuth {
+func makeGithubAuth(auths *Auths) *http.BasicAuth {
 	return &http.BasicAuth{
-		Username: configuration.gitHubToken,
+		Username: auths.GitHubToken,
 		Password: "",
 	}
 }

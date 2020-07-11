@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+
+go build -o go-back cmd/go-back/*.go

@@ -1,4 +1,4 @@
-package internal
+package repositories
 
 import (
 	"context"
@@ -10,6 +10,8 @@ import (
 	"time"
 )
 
+const PageSize = 50
+
 type Repository struct {
 	name  string
 	url   string
@@ -19,16 +21,36 @@ type Repository struct {
 	host  string
 }
 
-func BuildWorkerPool(config *Configuration) (*sync.WaitGroup, chan<- *Repository) {
+type CloneConfig struct {
+	timestamp   string
+	baseFolder  string
+	workerCount int
+}
+
+func (c *CloneConfig) pathFor(repository *Repository) string {
+	return path.Join(c.baseFolder, repository.host, c.timestamp, repository.name)
+}
+
+func MakeCloneConfig(workerCount int, baseFolder string) *CloneConfig {
+	timestamp := time.Now().UTC().Format(time.RFC3339)
+	return &CloneConfig{
+		timestamp:   timestamp,
+		baseFolder:  baseFolder,
+		workerCount: workerCount,
+	}
+}
+
+func MakeCloneWorkerPool(config *CloneConfig) (*sync.WaitGroup, chan<- *Repository) {
+	log.Printf("Clone phase is using %d workers", config.workerCount)
 	wg := &sync.WaitGroup{}
 	repositories := make(chan *Repository)
 	for i := 0; i < config.workerCount; i++ {
-		go cloneWorker(repositories, wg)
+		go cloneWorker(repositories, config, wg)
 	}
 	return wg, repositories
 }
 
-func cloneWorker(repositories <-chan *Repository, wg *sync.WaitGroup) {
+func cloneWorker(repositories <-chan *Repository, cloneConfig *CloneConfig, wg *sync.WaitGroup) {
 	wg.Add(1)
 	for repo := range repositories {
 		if repo.empty {
@@ -37,7 +59,7 @@ func cloneWorker(repositories <-chan *Repository, wg *sync.WaitGroup) {
 		}
 		log.Printf("Cloning %s", repo.name)
 		start := time.Now()
-		err := cloneRepo(repo)
+		err := cloneRepo(repo, cloneConfig)
 		if err != nil {
 			log.Fatalf("Failed cloning Repo[%s]. Err[%s]", repo.name, err)
 		}
@@ -61,11 +83,11 @@ func progress(ctx context.Context, name string) {
 	}
 }
 
-func cloneRepo(repository *Repository) error {
+func cloneRepo(repository *Repository, config *CloneConfig) error {
 	ctx := context.Background()
 	repositoryName := repository.name
 	go progress(ctx, repositoryName)
-	_, err := git.PlainClone(path.Join("repos", repository.host, repositoryName), false, &git.CloneOptions{
+	_, err := git.PlainClone(config.pathFor(repository), false, &git.CloneOptions{
 		URL:  repository.url,
 		Auth: repository.auth,
 	})

@@ -1,4 +1,4 @@
-package internal
+package repositories
 
 import (
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
@@ -6,9 +6,9 @@ import (
 	"log"
 )
 
-func GetGitlabRepos(config *Configuration, organizationId int) []*Repository {
-	client, err := gl.NewClient(config.gitLabToken)
-	gitLabAuth := makeGitLabAuth(config)
+func GetGitlabRepos(auths *Auths, organizationId int) []*Repository {
+	client, err := gl.NewClient(auths.GitLabToken)
+	gitLabAuth := makeGitLabAuth(auths)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -42,10 +42,10 @@ func doFetchGitlabProjects(client *gl.Client, currentPage int, lastPage int) []*
 	return projects
 }
 
-func makeGitLabAuth(config *Configuration) *http.BasicAuth {
+func makeGitLabAuth(auths *Auths) *http.BasicAuth {
 	return &http.BasicAuth{
 		Username: "oauth2",
-		Password: config.gitLabToken,
+		Password: auths.GitLabToken,
 	}
 }
 
@@ -57,7 +57,7 @@ func fromGitlabProjects(gitLabProjects []*gl.Project, gitLabAuth *http.BasicAuth
 			url:   glProject.HTTPURLToRepo,
 			empty: false,
 			auth:  gitLabAuth,
-			host: "GitLab",
+			host:  "GitLab",
 		})
 	}
 	return foundRepositories
