@@ -23,11 +23,6 @@ var args struct {
 func main() {
 	arg.MustParse(&args)
 
-	log.Println(args.WorkerCount)
-	log.Println(args.Bucket)
-	log.Println(args.Region)
-	log.Println(args.BackupFolder)
-
 	auths := MakeAuthsFromEnv()
 	cloneConfig := MakeCloneConfig(args.WorkerCount, args.BackupFolder)
 
@@ -40,7 +35,7 @@ func main() {
 	allRepositories := append(ghRepositories, glRepositories...)
 
 	wg, cloneQueue := MakeCloneWorkerPool(cloneConfig)
-	for _, repository := range allRepositories[:10] {
+	for _, repository := range allRepositories {
 		cloneQueue <- repository
 	}
 
@@ -52,6 +47,7 @@ func main() {
 }
 
 func upload(bucket string, region string, path string) {
+	log.Printf("Syncronizing %s folder into Bucket[%s]", path, bucket)
 	sess, err := session.NewSession(&aws.Config{
 		Region: aws.String(region),
 	})

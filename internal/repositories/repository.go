@@ -74,7 +74,7 @@ func progress(ctx context.Context, name string) {
 	var now time.Time
 	for {
 		select {
-		case <-time.Tick(10 * time.Second):
+		case <-time.Tick(20 * time.Second):
 			now = time.Now()
 			log.Printf("[%s] is still ongoing: %.0fs and ticking", name, now.Sub(start).Seconds())
 		case <-ctx.Done():
