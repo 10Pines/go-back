@@ -1,6 +1,5 @@
 FROM golang:alpine
-RUN mkdir /app
-ADD . /app/
 WORKDIR /app
+COPY . /app/
 RUN ./build
 ENTRYPOINT ["./go-back"]

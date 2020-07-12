@@ -1,7 +1,7 @@
 package main
 
 import (
-	"flag"
+	"github.com/alexflint/go-arg"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
@@ -13,16 +13,23 @@ import (
 const GitHubOrganizationName = "10Pines"
 const GitLabOrganizationId = 1152254
 
-func main() {
-	bucket := *flag.String("bucket", "", "bucket to upload to")
-	region := *flag.String("region", "", "region to be used when making requests")
-	backupFolder := *flag.String("backupFolder", "repos", "Backup folder to clone repositories into")
-	workerCount := *flag.Int("workers", 8, "Workers count")
+var args struct {
+	WorkerCount  int    `default:"8" help:"Number of cloning workers"`
+	Bucket       string `arg:"required" help:"S3 bucket name to upload backups to"`
+	Region       string `arg:"required" help:"S3 bucket region"`
+	BackupFolder string `arg:"required" help:"Backup will be locally stored inside this folder"`
+}
 
-	flag.Parse()
+func main() {
+	arg.MustParse(&args)
+
+	log.Println(args.WorkerCount)
+	log.Println(args.Bucket)
+	log.Println(args.Region)
+	log.Println(args.BackupFolder)
 
 	auths := MakeAuthsFromEnv()
-	cloneConfig := MakeCloneConfig(workerCount, backupFolder)
+	cloneConfig := MakeCloneConfig(args.WorkerCount, args.BackupFolder)
 
 	ghRepositories := GetGithubRepos(auths, GitHubOrganizationName)
 	log.Printf("Fetched %d repositories from GitHub", len(ghRepositories))
@@ -41,7 +48,7 @@ func main() {
 	wg.Wait()
 	log.Printf("Cloned %d repositories", len(allRepositories))
 
-	upload(bucket, region, backupFolder)
+	upload(args.Bucket, args.Region, args.BackupFolder)
 }
 
 func upload(bucket string, region string, path string) {
