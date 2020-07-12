@@ -57,7 +57,7 @@ func cloneWorker(repositories <-chan *Repository, cloneConfig *CloneConfig, wg *
 			log.Printf("Skipping Repo[%s] because it's empty", repo.name)
 			break
 		}
-		log.Printf("Cloning %s", repo.name)
+		log.Printf("Cloning %s@%s", repo.name, repo.host)
 		start := time.Now()
 		err := cloneRepo(repo, cloneConfig)
 		if err != nil {
@@ -84,13 +84,13 @@ func progress(ctx context.Context, name string) {
 }
 
 func cloneRepo(repository *Repository, config *CloneConfig) error {
-	ctx := context.Background()
+	ctx, cancelCtx := context.WithCancel(context.Background())
 	repositoryName := repository.name
 	go progress(ctx, repositoryName)
 	_, err := git.PlainClone(config.pathFor(repository), false, &git.CloneOptions{
 		URL:  repository.url,
 		Auth: repository.auth,
 	})
-	ctx.Done()
+	cancelCtx()
 	return err
 }
