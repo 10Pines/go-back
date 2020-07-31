@@ -13,7 +13,7 @@ import (
 const PageSize = 50
 
 type Repository struct {
-	name  string
+	Name  string
 	url   string
 	empty bool
 	auth  *http.BasicAuth
@@ -27,8 +27,12 @@ type CloneConfig struct {
 	workerCount int
 }
 
-func (c *CloneConfig) pathFor(repository *Repository) string {
-	return path.Join(c.baseFolder, repository.host, c.timestamp, repository.name)
+func (c *CloneConfig) ClonePath(repository *Repository) string {
+	return path.Join(c.baseFolder, "clone", repository.host, c.timestamp, repository.Name)
+}
+
+func (c *CloneConfig) ZipPath(repository *Repository) string {
+	return path.Join(c.baseFolder, "zip", repository.host, c.timestamp)
 }
 
 func MakeCloneConfig(workerCount int, baseFolder string) *CloneConfig {
@@ -54,17 +58,17 @@ func cloneWorker(repositories <-chan *Repository, cloneConfig *CloneConfig, wg *
 	wg.Add(1)
 	for repo := range repositories {
 		if repo.empty {
-			log.Printf("Skipping Repo[%s] because it's empty", repo.name)
+			log.Printf("Skipping Repo[%s] because it's empty", repo.Name)
 			break
 		}
-		log.Printf("Cloning %s@%s", repo.name, repo.host)
+		log.Printf("Cloning %s@%s", repo.Name, repo.host)
 		start := time.Now()
 		err := cloneRepo(repo, cloneConfig)
 		if err != nil {
-			log.Fatalf("Failed cloning Repo[%s]. Err[%s]", repo.name, err)
+			log.Fatalf("Failed cloning Repo[%s]. Err[%s]", repo.Name, err)
 		}
 		end := time.Now()
-		log.Printf("Cloned %s in %d ms", repo.name, end.Sub(start).Milliseconds())
+		log.Printf("Cloned %s in %d ms", repo.Name, end.Sub(start).Milliseconds())
 	}
 	wg.Done()
 }
@@ -85,9 +89,9 @@ func progress(ctx context.Context, name string) {
 
 func cloneRepo(repository *Repository, config *CloneConfig) error {
 	ctx, cancelCtx := context.WithCancel(context.Background())
-	repositoryName := repository.name
+	repositoryName := repository.Name
 	go progress(ctx, repositoryName)
-	_, err := git.PlainClone(config.pathFor(repository), false, &git.CloneOptions{
+	_, err := git.PlainClone(config.ClonePath(repository), false, &git.CloneOptions{
 		URL:  repository.url,
 		Auth: repository.auth,
 	})

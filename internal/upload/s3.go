@@ -13,6 +13,7 @@ type SyncFolderIterator struct {
 	bucket    string
 	fileInfos []fileInfo
 	err       error
+	fileCount int
 }
 
 type fileInfo struct {
@@ -35,10 +36,13 @@ func NewSyncFolderIterator(path, bucket string) *SyncFolderIterator {
 		log.Fatal(err)
 	}
 
+	fileCount := len(metadata)
+
 	return &SyncFolderIterator{
 		bucket,
 		metadata,
 		nil,
+		fileCount,
 	}
 }
 

@@ -53,7 +53,7 @@ func fromGitlabProjects(gitLabProjects []*gl.Project, gitLabAuth *http.BasicAuth
 	var foundRepositories []*Repository
 	for _, glProject := range gitLabProjects {
 		foundRepositories = append(foundRepositories, &Repository{
-			name:  glProject.Name,
+			Name:  glProject.Name,
 			url:   glProject.HTTPURLToRepo,
 			empty: false,
 			auth:  gitLabAuth,

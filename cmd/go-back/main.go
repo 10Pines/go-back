@@ -5,9 +5,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	. "go-re/internal/compression"
 	. "go-re/internal/repositories"
 	. "go-re/internal/upload"
 	"log"
+	"os"
+	"path"
 )
 
 const GitHubOrganizationName = "10Pines"
@@ -22,14 +25,13 @@ var args struct {
 
 func main() {
 	arg.MustParse(&args)
-
 	auths := MakeAuthsFromEnv()
 	cloneConfig := MakeCloneConfig(args.WorkerCount, args.BackupFolder)
 
-	ghRepositories := GetGithubRepos(auths, GitHubOrganizationName)
+	ghRepositories := GetGithubRepos(auths, GitHubOrganizationName)[:5]
 	log.Printf("Fetched %d repositories from GitHub", len(ghRepositories))
 
-	glRepositories := GetGitlabRepos(auths, GitLabOrganizationId)
+	glRepositories := GetGitlabRepos(auths, GitLabOrganizationId)[:5]
 	log.Printf("Fetched %d repositories from GitLab", len(glRepositories))
 
 	allRepositories := append(ghRepositories, glRepositories...)
@@ -43,7 +45,24 @@ func main() {
 	wg.Wait()
 	log.Printf("Cloned %d repositories", len(allRepositories))
 
-	upload(args.Bucket, args.Region, args.BackupFolder)
+	zipRepositories(allRepositories, cloneConfig)
+
+	upload(args.Bucket, args.Region, path.Join(args.BackupFolder, "zip"))
+}
+
+func zipRepositories(allRepositories []*Repository, cloneConfig *CloneConfig) {
+	for _, repository := range allRepositories {
+		repositoryPath := cloneConfig.ClonePath(repository)
+		output := cloneConfig.ZipPath(repository)
+		err := os.MkdirAll(output, 0755)
+		if err != nil {
+			log.Fatalf(err.Error())
+		}
+		err = ZipFolder(repositoryPath, path.Join(output, repository.Name+".zip"))
+		if err != nil {
+			log.Fatalf(err.Error())
+		}
+	}
 }
 
 func upload(bucket string, region string, path string) {

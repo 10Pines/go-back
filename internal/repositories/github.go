@@ -50,7 +50,7 @@ func fromGitHubRepositories(gitHubRepositories []*gh.Repository, gitHubAuth *htt
 	var foundRepositories []*Repository
 	for _, ghRepo := range gitHubRepositories {
 		foundRepositories = append(foundRepositories, &Repository{
-			name:  ghRepo.GetName(),
+			Name:  ghRepo.GetName(),
 			url:   ghRepo.GetCloneURL(),
 			empty: isEmpty(ghRepo),
 			auth:  gitHubAuth,
