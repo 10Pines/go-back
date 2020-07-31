@@ -28,10 +28,10 @@ func main() {
 	auths := MakeAuthsFromEnv()
 	cloneConfig := MakeCloneConfig(args.WorkerCount, args.BackupFolder)
 
-	ghRepositories := GetGithubRepos(auths, GitHubOrganizationName)[:5]
+	ghRepositories := GetGithubRepos(auths, GitHubOrganizationName)
 	log.Printf("Fetched %d repositories from GitHub", len(ghRepositories))
 
-	glRepositories := GetGitlabRepos(auths, GitLabOrganizationId)[:5]
+	glRepositories := GetGitlabRepos(auths, GitLabOrganizationId)
 	log.Printf("Fetched %d repositories from GitLab", len(glRepositories))
 
 	allRepositories := append(ghRepositories, glRepositories...)
