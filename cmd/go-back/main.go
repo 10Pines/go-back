@@ -10,6 +10,7 @@ import (
 	. "go-re/internal/upload"
 	"log"
 	"os"
+	"os/exec"
 	"path"
 )
 
@@ -24,6 +25,13 @@ var args struct {
 }
 
 func main() {
+	cmd := exec.Command("df", "-h")
+	output, err := cmd.Output()
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
+	log.Print(string(output))
+
 	arg.MustParse(&args)
 	auths := MakeAuthsFromEnv()
 	cloneConfig := MakeCloneConfig(args.WorkerCount, args.BackupFolder)
