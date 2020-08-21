@@ -2,10 +2,11 @@ package repositories
 
 import (
 	"context"
+	"log"
+
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	gh "github.com/google/go-github/v32/github"
 	"golang.org/x/oauth2"
-	"log"
 )
 
 func GetGithubRepos(auths *Auths, organizationName string) []*Repository {

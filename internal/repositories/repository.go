@@ -2,12 +2,17 @@ package repositories
 
 import (
 	"context"
-	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	"log"
+	"os"
 	"path"
+	"path/filepath"
 	"sync"
 	"time"
+
+	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing/transport/http"
+
+	"go-re/internal/compression"
 )
 
 const PageSize = 50
@@ -17,7 +22,6 @@ type Repository struct {
 	url   string
 	empty bool
 	auth  *http.BasicAuth
-	from  string
 	host  string
 }
 
@@ -27,12 +31,8 @@ type CloneConfig struct {
 	workerCount int
 }
 
-func (c *CloneConfig) ClonePath(repository *Repository) string {
-	return path.Join(c.baseFolder, "clone", repository.host, c.timestamp, repository.Name)
-}
-
-func (c *CloneConfig) ZipPath(repository *Repository) string {
-	return path.Join(c.baseFolder, "zip", repository.host, c.timestamp)
+func (c *CloneConfig) Path(repository *Repository) string {
+	return path.Join(c.baseFolder, repository.host, c.timestamp, repository.Name)
 }
 
 func MakeCloneConfig(workerCount int, baseFolder string) *CloneConfig {
@@ -56,21 +56,35 @@ func MakeCloneWorkerPool(config *CloneConfig) (*sync.WaitGroup, chan<- *Reposito
 
 func cloneWorker(repositories <-chan *Repository, cloneConfig *CloneConfig, wg *sync.WaitGroup) {
 	wg.Add(1)
-	for repo := range repositories {
-		if repo.empty {
-			log.Printf("Skipping Repo[%s] because it's empty", repo.Name)
+	for repository := range repositories {
+		if repository.empty {
+			log.Printf("Skipping Repo[%s] because it's empty", repository.Name)
 			break
 		}
-		log.Printf("Cloning %s@%s", repo.Name, repo.host)
+		log.Printf("Cloning %s@%s", repository.Name, repository.host)
 		start := time.Now()
-		err := cloneRepo(repo, cloneConfig)
+		repositoryPath := cloneConfig.Path(repository)
+		err := cloneRepo(repository, repositoryPath)
 		if err != nil {
-			log.Fatalf("Failed cloning Repo[%s]. Err[%s]", repo.Name, err)
+			log.Fatalf("Failed cloning Repo[%s]. Err[%s]", repository.Name, err)
 		}
 		end := time.Now()
-		log.Printf("Cloned %s in %d ms", repo.Name, end.Sub(start).Milliseconds())
+		log.Printf("Cloned %s in %d ms", repository.Name, end.Sub(start).Milliseconds())
+		err = zip(repositoryPath, repository)
+		if err != nil {
+			log.Fatalf("Failed compressing Repo[%s]. Err[%s]", repository.Name, err)
+		}
+		err = os.RemoveAll(repositoryPath)
+		if err != nil {
+			log.Fatalf("Failed deleting Repo[%s]. Err[%s]", repository.Name, err)
+		}
 	}
 	wg.Done()
+}
+
+func zip(repositoryPath string, repository *Repository) error {
+	repositoriesPath := filepath.Dir(repositoryPath)
+	return compression.ZipFolder(repositoryPath, path.Join(repositoriesPath, repository.Name+".zip"))
 }
 
 func progress(ctx context.Context, name string) {
@@ -78,7 +92,7 @@ func progress(ctx context.Context, name string) {
 	var now time.Time
 	for {
 		select {
-		case <-time.Tick(20 * time.Second):
+		case <-time.NewTicker(20 * time.Second).C:
 			now = time.Now()
 			log.Printf("[%s] is still ongoing: %.0fs and ticking", name, now.Sub(start).Seconds())
 		case <-ctx.Done():
@@ -87,11 +101,11 @@ func progress(ctx context.Context, name string) {
 	}
 }
 
-func cloneRepo(repository *Repository, config *CloneConfig) error {
+func cloneRepo(repository *Repository, repositoryPath string) error {
 	ctx, cancelCtx := context.WithCancel(context.Background())
 	repositoryName := repository.Name
 	go progress(ctx, repositoryName)
-	_, err := git.PlainClone(config.ClonePath(repository), false, &git.CloneOptions{
+	_, err := git.PlainClone(repositoryPath, false, &git.CloneOptions{
 		URL:  repository.url,
 		Auth: repository.auth,
 	})

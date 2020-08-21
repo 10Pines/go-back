@@ -1,9 +1,10 @@
 package repositories
 
 import (
+	"log"
+
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	gl "github.com/xanzy/go-gitlab"
-	"log"
 )
 
 func GetGitlabRepos(auths *Auths, organizationId int) []*Repository {

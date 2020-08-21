@@ -1,15 +1,18 @@
-package upload
+package s3
 
 import (
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"log"
 	"mime"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
-type SyncFolderIterator struct {
+type syncFolderIterator struct {
 	bucket    string
 	fileInfos []fileInfo
 	err       error
@@ -21,7 +24,12 @@ type fileInfo struct {
 	fullPath string
 }
 
-func NewSyncFolderIterator(path, bucket string) *SyncFolderIterator {
+type Uploader struct {
+	bucket string
+	region string
+}
+
+func newSyncFolderIterator(path, bucket string) *syncFolderIterator {
 	var metadata []fileInfo
 	err := filepath.Walk(path, func(p string, info os.FileInfo, err error) error {
 		if !info.IsDir() {
@@ -38,7 +46,7 @@ func NewSyncFolderIterator(path, bucket string) *SyncFolderIterator {
 
 	fileCount := len(metadata)
 
-	return &SyncFolderIterator{
+	return &syncFolderIterator{
 		bucket,
 		metadata,
 		nil,
@@ -48,18 +56,18 @@ func NewSyncFolderIterator(path, bucket string) *SyncFolderIterator {
 
 // Next will determine whether or not there is any remaining files to
 // be uploaded.
-func (iter *SyncFolderIterator) Next() bool {
+func (iter *syncFolderIterator) Next() bool {
 	return len(iter.fileInfos) > 0
 }
 
 // Err returns any error when os.Open is called.
-func (iter *SyncFolderIterator) Err() error {
+func (iter *syncFolderIterator) Err() error {
 	return iter.err
 }
 
-// UploadObject will prep the new upload object by open that file and constructing a new
+// UploadObject will prep the new s3 object by open that file and constructing a new
 // s3manager.UploadInput.
-func (iter *SyncFolderIterator) UploadObject() s3manager.BatchUploadObject {
+func (iter *syncFolderIterator) UploadObject() s3manager.BatchUploadObject {
 	fi := iter.fileInfos[0]
 	iter.fileInfos = iter.fileInfos[1:]
 	body, err := os.Open(fi.fullPath)
@@ -86,6 +94,32 @@ func (iter *SyncFolderIterator) UploadObject() s3manager.BatchUploadObject {
 	}
 }
 
-func (iter *SyncFolderIterator) Length() int {
+func (iter *syncFolderIterator) Length() int {
 	return len(iter.fileInfos)
+}
+
+func New(bucket, region string) Uploader {
+	return Uploader{
+		bucket: bucket,
+		region: region,
+	}
+}
+
+func (u Uploader) Sync(path string) {
+	log.Printf("Syncronizing %s folder into Bucket[%s]", path, u.bucket)
+	sess, err := session.NewSession(&aws.Config{
+		Region: aws.String(u.region),
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	uploader := s3manager.NewUploader(sess)
+
+	iter := newSyncFolderIterator(path, u.bucket)
+	log.Printf("Uploading %d objects to s3", iter.Length())
+	if err := uploader.UploadWithIterator(aws.BackgroundContext(), iter); err != nil {
+		log.Fatal(err)
+	}
+
+	log.Printf("Finished uploading %s folder", path)
 }
