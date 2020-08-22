@@ -71,6 +71,18 @@ Resources:
       Timeout:
         AttemptDurationSeconds: 3600
       Type: container
+  TriggerBackupJob:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: String
+      EventBusName: String
+      EventPattern: Json
+      Name: String
+      RoleArn: String
+      ScheduleExpression: String
+      State: String
+      Targets:
+        - Target
 Parameters:
   GitHubToken:
     Type: String
