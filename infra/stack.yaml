@@ -82,7 +82,11 @@ Resources:
       ScheduleExpression: String
       State: String
       Targets:
-        - Target
+        - Arn: !Ref JobQueue
+          BatchParameters:
+            JobDefinition: !Ref JobDefinition
+            JobName: go-back-full-repos-backup-to-s3
+          Id: go-back
 Parameters:
   GitHubToken:
     Type: String
