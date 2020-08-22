@@ -7,7 +7,7 @@ Resources:
       ComputeEnvironmentName: go-back-compute-environment
       ComputeResources:
         MinvCpus: 0
-        DesiredvCpus: 0
+        DesiredvCpus: 4
         MaxvCpus: 4
         InstanceRole: arn:aws:iam::528784232475:instance-profile/ecsInstanceRole
         InstanceTypes:
@@ -75,7 +75,7 @@ Resources:
     Type: AWS::Events::Rule
     Properties:
       Description: Triggers a full back of GitLab and GitHub
-      ScheduleExpression: rate(10 minutes)
+      ScheduleExpression: rate(1 day)
       Targets:
         - Arn: !Ref JobQueue
           RoleArn: !GetAtt SubmitGoBackJobRole.Arn
