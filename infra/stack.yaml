@@ -74,13 +74,8 @@ Resources:
   TriggerBackupJob:
     Type: AWS::Events::Rule
     Properties:
-      Description: String
-      EventBusName: String
-      EventPattern: Json
-      Name: String
-      RoleArn: String
-      ScheduleExpression: String
-      State: String
+      Description: Triggers a full back of GitLab and GitHub
+      ScheduleExpression: rate(1 day)
       Targets:
         - Arn: !Ref JobQueue
           BatchParameters:
