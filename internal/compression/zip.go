@@ -1,3 +1,4 @@
+// Package compression contains compression logic
 package compression
 
 import (
@@ -8,6 +9,7 @@ import (
 	"strings"
 )
 
+// ZipFolder zips source content into a Zip file
 func ZipFolder(source, target string) error {
 	zipFile, err := os.Create(target)
 	if err != nil {
@@ -55,7 +57,7 @@ func ZipFolder(source, target string) error {
 			return nil
 		}
 
-		file, err := os.Open(path)
+		file, err := os.Open(filepath.Clean(path))
 		if err != nil {
 			return err
 		}

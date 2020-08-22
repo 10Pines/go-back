@@ -1,0 +1,18 @@
+run:
+  concurrency: 8
+  timeout: 60s
+  tests: false
+linters:
+  enable:
+    - dogsled
+    - gochecknoinits
+    - goconst
+    - godox
+    - goimports
+    - golint
+    - gosec
+    - rowserrcheck
+    - stylecheck
+    - unparam
+issues:
+  exclude-use-default: false

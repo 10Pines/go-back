@@ -1,4 +1,4 @@
-package s3
+package uploader
 
 import (
 	"log"
@@ -7,27 +7,22 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
-type syncFolderIterator struct {
-	bucket    string
-	fileInfos []fileInfo
-	err       error
-	fileCount int
-}
+type (
+	syncFolderIterator struct {
+		bucket    string
+		fileInfos []fileInfo
+		err       error
+		fileCount int
+	}
 
-type fileInfo struct {
-	key      string
-	fullPath string
-}
-
-type Uploader struct {
-	bucket string
-	region string
-}
+	fileInfo struct {
+		key      string
+		fullPath string
+	}
+)
 
 func newSyncFolderIterator(path, bucket string) *syncFolderIterator {
 	var metadata []fileInfo
@@ -54,22 +49,18 @@ func newSyncFolderIterator(path, bucket string) *syncFolderIterator {
 	}
 }
 
-// Next will determine whether or not there is any remaining files to
-// be uploaded.
 func (iter *syncFolderIterator) Next() bool {
 	return len(iter.fileInfos) > 0
 }
 
-// Err returns any error when os.Open is called.
 func (iter *syncFolderIterator) Err() error {
 	return iter.err
 }
 
-// UploadObject will prep the new s3 object by open that file and constructing a new
-// s3manager.UploadInput.
 func (iter *syncFolderIterator) UploadObject() s3manager.BatchUploadObject {
 	fi := iter.fileInfos[0]
 	iter.fileInfos = iter.fileInfos[1:]
+	log.Printf("Uploading %s, %d to go", fi.key, iter.Length())
 	body, err := os.Open(fi.fullPath)
 	if err != nil {
 		iter.err = err
@@ -96,30 +87,4 @@ func (iter *syncFolderIterator) UploadObject() s3manager.BatchUploadObject {
 
 func (iter *syncFolderIterator) Length() int {
 	return len(iter.fileInfos)
-}
-
-func New(bucket, region string) Uploader {
-	return Uploader{
-		bucket: bucket,
-		region: region,
-	}
-}
-
-func (u Uploader) Sync(path string) {
-	log.Printf("Syncronizing %s folder into Bucket[%s]", path, u.bucket)
-	sess, err := session.NewSession(&aws.Config{
-		Region: aws.String(u.region),
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
-	uploader := s3manager.NewUploader(sess)
-
-	iter := newSyncFolderIterator(path, u.bucket)
-	log.Printf("Uploading %d objects to s3", iter.Length())
-	if err := uploader.UploadWithIterator(aws.BackgroundContext(), iter); err != nil {
-		log.Fatal(err)
-	}
-
-	log.Printf("Finished uploading %s folder", path)
 }
