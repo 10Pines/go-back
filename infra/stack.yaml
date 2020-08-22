@@ -78,7 +78,7 @@ Resources:
       ScheduleExpression: rate(1 day)
       Targets:
         - Arn: !Ref JobQueue
-          RoleArn: !Ref SubmitGoBackJobRole
+          RoleArn: !GetAtt SubmitGoBackJobRole.Arn
           BatchParameters:
             JobDefinition: !Ref JobDefinition
             JobName: go-back-full-repos-backup-to-s3
@@ -87,13 +87,22 @@ Resources:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
-        Version: "2012-10-17"
+        Version: 2012-10-17
         Statement:
-          - "Effect": Allow
-            "Action": batch:SubmitJob
-            "Resource":
-              - !Ref JobQueue
-              - !Ref JobDefinition
+          - Effect: Allow
+            Principal:
+              Service: events.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: go-back-allow-job-submit
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: batch:SubmitJob
+                Resource:
+                  - !Ref JobQueue
+                  - !Ref JobDefinition
 Parameters:
   GitHubToken:
     Type: String
