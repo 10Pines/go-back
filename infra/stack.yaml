@@ -75,7 +75,7 @@ Resources:
     Type: AWS::Events::Rule
     Properties:
       Description: Triggers a full back of GitLab and GitHub
-      ScheduleExpression: rate(1 day)
+      ScheduleExpression: rate(10 minutes)
       Targets:
         - Arn: !Ref JobQueue
           RoleArn: !GetAtt SubmitGoBackJobRole.Arn
