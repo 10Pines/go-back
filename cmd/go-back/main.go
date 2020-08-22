@@ -5,8 +5,6 @@ import (
 	"time"
 
 	"github.com/alexflint/go-arg"
-
-	"go-re/internal/uploader"
 )
 
 // Well known values that identifies 10Pines repositories
@@ -15,7 +13,7 @@ const (
 	GitLabOrganizationID   = 1152254
 )
 
-var args struct {
+type appArgs struct {
 	WorkerCount  int    `default:"8" help:"Number of cloning workers"`
 	Bucket       string `arg:"required" help:"S3 bucket name where the backup is stored"`
 	Region       string `arg:"required" help:"S3 bucket region"`
@@ -23,8 +21,13 @@ var args struct {
 }
 
 func main() {
+	args := appArgs{}
 	arg.MustParse(&args)
 	now := time.Now().UTC().Format(time.RFC3339)
+
+	log.Printf("using %d workers", args.WorkerCount)
+	log.Printf("using %s as working directory", args.BackupFolder)
+	log.Printf("repositories will be uploaded to %s", args.Bucket)
 
 	gh, gl := buildProviders()
 	ghRepositories := gh.AllRepositories(GitHubOrganizationName)
@@ -35,10 +38,7 @@ func main() {
 
 	allRepositories := append(ghRepositories, glRepositories...)
 
-	b := buildBackup(now)
-	b.Process(allRepositories)
-	log.Printf("Cloned %d repository", len(allRepositories))
-
-	bucket := uploader.New(args.Bucket, args.Region)
-	bucket.Sync(args.BackupFolder)
+	b := buildBackup(args, now)
+	s := b.Process(allRepositories)
+	log.Print(s)
 }

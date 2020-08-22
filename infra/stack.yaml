@@ -1,0 +1,88 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: go-back infrastructure definition
+Resources:
+  JobComputeEnvironment:
+    Type: AWS::Batch::ComputeEnvironment
+    Properties:
+      ComputeEnvironmentName: go-back-compute-environment
+      ComputeResources:
+        MinvCpus: 0
+        DesiredvCpus: 0
+        MaxvCpus: 4
+        InstanceRole: arn:aws:iam::528784232475:instance-profile/ecsInstanceRole
+        InstanceTypes:
+          - optimal
+        LaunchTemplate:
+          LaunchTemplateId: !Ref InstanceTemplate
+          Version: $Latest
+        Subnets: !Ref Subnets
+        Type: EC2
+      ServiceRole: arn:aws:iam::528784232475:role/service-role/AWSBatchServiceRole
+      Type: MANAGED
+  InstanceTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateData:
+        BlockDeviceMappings:
+          - DeviceName: work
+            Ebs:
+              DeleteOnTermination: true
+              VolumeSize: 40
+              VolumeType: gp2
+      LaunchTemplateName: go-back-template
+  JobQueue:
+    Type: AWS::Batch::JobQueue
+    Properties:
+      ComputeEnvironmentOrder:
+        - ComputeEnvironment: !Ref JobComputeEnvironment
+          Order: 1
+      JobQueueName: go-back
+      Priority: 1
+  JobDefinition:
+    Type: AWS::Batch::JobDefinition
+    Properties:
+      ContainerProperties:
+        Command:
+          - "-bucket"
+          - !Ref BucketName
+          - "-region"
+          - !Ref BucketRegion
+          - "-backupfolder"
+          - "/work"
+        Environment:
+          - Name: GL_TOKEN
+            Value: !Ref GitLabToken
+          - Name: GH_TOKEN
+            Value: !Ref GitHubToken
+        Image: 528784232475.dkr.ecr.us-west-2.amazonaws.com/go-back:latest
+        JobRoleArn: arn:aws:iam::528784232475:role/go-back-ecs-execution-role
+        Memory: 2000
+        MountPoints:
+          - ContainerPath: /work
+            SourceVolume: work
+        Vcpus: 4
+        Volumes:
+          - Host:
+              SourcePath: work
+            Name: work
+      JobDefinitionName: go-back
+      RetryStrategy:
+        Attempts: 2
+      Timeout:
+        AttemptDurationSeconds: 3600
+      Type: container
+Parameters:
+  GitHubToken:
+    Type: String
+    Description: GitHub token
+  GitLabToken:
+    Type: String
+    Description: GitLab token
+  BucketName:
+    Type: String
+    Description: S3 bucket name
+  BucketRegion:
+    Type: String
+    Description: S3 bucket region
+  Subnets:
+    Type: List<AWS::EC2::Subnet::Id>

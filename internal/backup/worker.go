@@ -15,15 +15,39 @@ import (
 	"go-re/internal/repository"
 )
 
-type worker struct {
-	basePath string
-	backupID string
-}
+type (
+	// Stats contains the process summary stats
+	Stats struct {
+		Time      int64
+		RepoStats []RepoStats
+	}
 
-func (w worker) Clone(repository *repository.Repository) {
+	// RepoStats contains information related with the clone and compression steps
+	RepoStats struct {
+		Name  string
+		Clone int64
+		Zip   int64
+	}
+
+	worker struct {
+		basePath string
+		backupID string
+	}
+)
+
+func (w worker) Clone(repository *repository.Repository) RepoStats {
 	repositoryPath := path.Join(w.basePath, repository.Host(), w.backupID, repository.Name())
+	start := time.Now()
 	w.clone(repository, repositoryPath)
+	cloneTime := time.Since(start).Milliseconds()
+	start = time.Now()
 	w.zip(repository.Name(), repositoryPath)
+	zipTime := time.Since(start).Milliseconds()
+	return RepoStats{
+		Name:  repository.Name() + repository.Host(),
+		Clone: cloneTime,
+		Zip:   zipTime,
+	}
 }
 
 func (w worker) zip(repositoryName string, repositoryPath string) {

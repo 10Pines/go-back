@@ -20,7 +20,7 @@ func buildProviders() (repository.GitHub, repository.GitLab) {
 	return gh, gl
 }
 
-func buildBackup(timestamp string) backup.Backup {
+func buildBackup(args appArgs, timestamp string) backup.Backup {
 	config := backup.Config{
 		BackupProcessID: timestamp,
 		BasePath:        args.BackupFolder,
