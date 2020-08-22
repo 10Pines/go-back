@@ -78,10 +78,22 @@ Resources:
       ScheduleExpression: rate(1 day)
       Targets:
         - Arn: !Ref JobQueue
+          RoleArn: !Ref SubmitGoBackJobRole
           BatchParameters:
             JobDefinition: !Ref JobDefinition
             JobName: go-back-full-repos-backup-to-s3
           Id: go-back
+  SubmitGoBackJobRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - "Effect": Allow
+            "Action": batch:SubmitJob
+            "Resource":
+              - !Ref JobQueue
+              - !Ref JobDefinition
 Parameters:
   GitHubToken:
     Type: String
