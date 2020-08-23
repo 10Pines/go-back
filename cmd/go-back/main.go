@@ -2,7 +2,6 @@ package main
 
 import (
 	"log"
-	"os/exec"
 	"time"
 
 	"github.com/alexflint/go-arg"
@@ -22,14 +21,6 @@ type appArgs struct {
 }
 
 func main() {
-
-	cmd := exec.Command("df", "-h")
-	output, err := cmd.Output()
-	if err != nil {
-		log.Fatalf(err.Error())
-	}
-	log.Print(string(output))
-
 	args := appArgs{}
 	arg.MustParse(&args)
 	now := time.Now().UTC().Format(time.RFC3339)

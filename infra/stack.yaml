@@ -9,7 +9,9 @@ Resources:
         MinvCpus: 0
         DesiredvCpus: 4
         MaxvCpus: 4
+        Ec2KeyPair: go-back
         InstanceRole: arn:aws:iam::528784232475:instance-profile/ecsInstanceRole
+        ImageId: ami-0f81f2fedbcf0d840
         InstanceTypes:
           - optimal
         LaunchTemplate:
@@ -61,12 +63,12 @@ Resources:
         Memory: 2000
         MountPoints:
           - ContainerPath: /work
-            SourceVolume: work
+            SourceVolume: workdir
         Vcpus: 4
         Volumes:
           - Host:
-              SourcePath: /dev/sdb
-            Name: work
+              SourcePath: /work
+            Name: workdir
       JobDefinitionName: go-back
       RetryStrategy:
         Attempts: 2
