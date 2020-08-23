@@ -24,7 +24,7 @@ Resources:
     Properties:
       LaunchTemplateData:
         BlockDeviceMappings:
-          - DeviceName: work
+          - DeviceName: /dev/sdb
             Ebs:
               Encrypted: false
               DeleteOnTermination: true
@@ -65,7 +65,7 @@ Resources:
         Vcpus: 4
         Volumes:
           - Host:
-              SourcePath: work
+              SourcePath: /dev/sdb
             Name: work
       JobDefinitionName: go-back
       RetryStrategy:
