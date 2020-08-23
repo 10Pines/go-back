@@ -21,13 +21,17 @@ type (
 		BackupProcessID string
 		BasePath        string
 		WorkerCount     int
+		Bucket          string
+		BucketRegion    string
 	}
 )
 
 // New creates a new Backup instance
 func New(config Config) Backup {
+	u := uploader.New(config.Bucket, config.BucketRegion)
 	return Backup{
-		config: config,
+		config:   config,
+		uploader: u,
 	}
 }
 

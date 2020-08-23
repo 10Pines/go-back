@@ -25,6 +25,8 @@ func buildBackup(args appArgs, timestamp string) backup.Backup {
 		BackupProcessID: timestamp,
 		BasePath:        args.BackupFolder,
 		WorkerCount:     args.WorkerCount,
+		Bucket:          args.Bucket,
+		BucketRegion:    args.Region,
 	}
 	return backup.New(config)
 }
