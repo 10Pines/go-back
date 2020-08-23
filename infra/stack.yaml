@@ -26,9 +26,11 @@ Resources:
         BlockDeviceMappings:
           - DeviceName: work
             Ebs:
+              Encrypted: false
               DeleteOnTermination: true
               VolumeSize: 40
               VolumeType: gp2
+
       LaunchTemplateName: go-back-template
   JobQueue:
     Type: AWS::Batch::JobQueue
