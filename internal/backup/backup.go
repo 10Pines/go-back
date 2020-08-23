@@ -62,7 +62,6 @@ func (b Backup) cloneAndZip(repositories []*repository.Repository) []RepoStats {
 }
 
 func makeWorkerPool(config Config) (*sync.WaitGroup, chan<- *repository.Repository, *tracker) {
-	log.Printf("Clone phase is using %d workers", config.WorkerCount)
 	wg := &sync.WaitGroup{}
 	t := tracker{}
 	repositories := make(chan *repository.Repository)

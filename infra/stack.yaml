@@ -14,26 +14,11 @@ Resources:
         ImageId: ami-0f81f2fedbcf0d840
         InstanceTypes:
           - optimal
-        LaunchTemplate:
-          LaunchTemplateId: !Ref InstanceTemplate
-          Version: $Latest
+        SecurityGroupIds: !Ref SecurityGroups
         Subnets: !Ref Subnets
         Type: EC2
       ServiceRole: arn:aws:iam::528784232475:role/service-role/AWSBatchServiceRole
       Type: MANAGED
-  InstanceTemplate:
-    Type: AWS::EC2::LaunchTemplate
-    Properties:
-      LaunchTemplateData:
-        BlockDeviceMappings:
-          - DeviceName: /dev/sdb
-            Ebs:
-              Encrypted: false
-              DeleteOnTermination: true
-              VolumeSize: 40
-              VolumeType: gp2
-
-      LaunchTemplateName: go-back-template
   JobQueue:
     Type: AWS::Batch::JobQueue
     Properties:
@@ -122,3 +107,5 @@ Parameters:
     Description: S3 bucket region
   Subnets:
     Type: List<AWS::EC2::Subnet::Id>
+  SecurityGroups:
+    Type: List<AWS::EC2::SecurityGroup::Id>
