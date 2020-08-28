@@ -9,33 +9,19 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/go-git/go-git/v5"
-
 	"go-re/internal/compression"
 	"go-re/internal/repository"
+	"go-re/internal/stats"
+
+	"github.com/go-git/go-git/v5"
 )
 
-type (
-	// Stats contains the process summary stats
-	Stats struct {
-		Time      int64
-		RepoStats []RepoStats
-	}
+type worker struct {
+	basePath string
+	backupID string
+}
 
-	// RepoStats contains information related with the clone and compression steps
-	RepoStats struct {
-		Name  string
-		Clone int64
-		Zip   int64
-	}
-
-	worker struct {
-		basePath string
-		backupID string
-	}
-)
-
-func (w worker) Clone(repository *repository.Repository) RepoStats {
+func (w worker) Clone(repository *repository.Repository) stats.RepoStats {
 	repositoryPath := path.Join(w.basePath, repository.Host(), w.backupID, repository.Name())
 	start := time.Now()
 	w.clone(repository, repositoryPath)
@@ -43,8 +29,9 @@ func (w worker) Clone(repository *repository.Repository) RepoStats {
 	start = time.Now()
 	w.zip(repository.Name(), repositoryPath)
 	zipTime := time.Since(start).Milliseconds()
-	return RepoStats{
-		Name:  repository.Name() + repository.Host(),
+	return stats.RepoStats{
+		Name:  repository.Name(),
+		Host:  repository.Host(),
 		Clone: cloneTime,
 		Zip:   zipTime,
 	}

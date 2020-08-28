@@ -18,12 +18,13 @@ type appArgs struct {
 	Bucket       string `arg:"required" help:"S3 bucket name where the backup is stored"`
 	Region       string `arg:"required" help:"S3 bucket region"`
 	BackupFolder string `arg:"required" help:"Backup will be locally stored inside this folder"`
+	Namespace    string `arg:"required" help:"Cloudwatch namespace where metrics will be published"`
 }
 
 func main() {
 	args := appArgs{}
 	arg.MustParse(&args)
-	now := time.Now().UTC().Format(time.RFC3339)
+	timestamp := time.Now().UTC()
 
 	log.Printf("using %d workers", args.WorkerCount)
 	log.Printf("using %s as working directory", args.BackupFolder)
@@ -38,7 +39,6 @@ func main() {
 
 	allRepositories := append(ghRepositories, glRepositories...)
 
-	b := buildBackup(args, now)
-	s := b.Process(allRepositories)
-	log.Print(s)
+	b := buildBackup(args, timestamp)
+	b.Process(allRepositories)
 }

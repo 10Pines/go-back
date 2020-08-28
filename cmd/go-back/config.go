@@ -1,8 +1,10 @@
 package main
 
 import (
+	"go-re/internal/stats"
 	"log"
 	"os"
+	"time"
 
 	"go-re/internal/backup"
 	"go-re/internal/repository"
@@ -20,15 +22,16 @@ func buildProviders() (repository.GitHub, repository.GitLab) {
 	return gh, gl
 }
 
-func buildBackup(args appArgs, timestamp string) backup.Backup {
+func buildBackup(args appArgs, timestamp time.Time) backup.Backup {
 	config := backup.Config{
-		BackupProcessID: timestamp,
-		BasePath:        args.BackupFolder,
-		WorkerCount:     args.WorkerCount,
-		Bucket:          args.Bucket,
-		BucketRegion:    args.Region,
+		Timestamp:    timestamp,
+		BasePath:     args.BackupFolder,
+		WorkerCount:  args.WorkerCount,
+		Bucket:       args.Bucket,
+		BucketRegion: args.Region,
 	}
-	return backup.New(config)
+	reporter := stats.NewReporter(config.Timestamp, args.Namespace)
+	return backup.New(config, reporter)
 }
 
 func mustParseEnv() env {

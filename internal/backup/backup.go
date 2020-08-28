@@ -1,6 +1,7 @@
 package backup
 
 import (
+	"go-re/internal/stats"
 	"log"
 	"sync"
 	"time"
@@ -14,91 +15,72 @@ type (
 	Backup struct {
 		config   Config
 		uploader uploader.Uploader
+		reporter *stats.Reporter
 	}
 
 	// Config contains Backup configuration
 	Config struct {
-		BackupProcessID string
-		BasePath        string
-		WorkerCount     int
-		Bucket          string
-		BucketRegion    string
+		Timestamp    time.Time
+		BasePath     string
+		WorkerCount  int
+		Bucket       string
+		BucketRegion string
 	}
 )
 
 // New creates a new Backup instance
-func New(config Config) Backup {
+func New(config Config, reporter *stats.Reporter) Backup {
 	u := uploader.New(config.Bucket, config.BucketRegion)
 	return Backup{
 		config:   config,
 		uploader: u,
+		reporter: reporter,
 	}
 }
 
 // Process starts the backup pipeline
-func (b Backup) Process(repositories []*repository.Repository) Stats {
-	start := time.Now()
-	stats := Stats{}
-	stats.RepoStats = b.cloneAndZip(repositories)
+func (b Backup) Process(repositories []*repository.Repository) {
+	b.cloneAndZip(repositories)
 	b.uploadToS3(b.config.BasePath)
-	stats.Time = time.Since(start).Milliseconds()
-	return stats
+	b.reporter.Finished()
 }
 
 func (b Backup) uploadToS3(workPath string) {
 	b.uploader.Sync(workPath)
 }
 
-func (b Backup) cloneAndZip(repositories []*repository.Repository) []RepoStats {
-	wg, cloneQueue, t := makeWorkerPool(b.config)
+func (b Backup) cloneAndZip(repositories []*repository.Repository) {
+	wg, cloneQueue := makeWorkerPool(b.config, b.reporter)
 	for _, repo := range repositories {
 		cloneQueue <- repo
 	}
 	close(cloneQueue)
 	wg.Wait()
-	stats := t.Stats()
-	log.Printf("cloned %d repositores", len(stats))
-	return stats
 }
 
-func makeWorkerPool(config Config) (*sync.WaitGroup, chan<- *repository.Repository, *tracker) {
+func makeWorkerPool(config Config, reporter *stats.Reporter) (*sync.WaitGroup, chan<- *repository.Repository) {
 	wg := &sync.WaitGroup{}
-	t := tracker{}
 	repositories := make(chan *repository.Repository)
 	for i := 0; i < config.WorkerCount; i++ {
-		go addWorker(repositories, config, wg, &t)
+		go addWorker(repositories, config, wg, reporter)
 	}
-	return wg, repositories, &t
+	return wg, repositories
 }
 
-func addWorker(repositories <-chan *repository.Repository, config Config, wg *sync.WaitGroup, t *tracker) {
+func addWorker(repositories <-chan *repository.Repository, config Config, wg *sync.WaitGroup, reporter *stats.Reporter) {
 	wg.Add(1)
+	timestamp := config.Timestamp.Format(time.RFC3339)
 	w := worker{
 		basePath: config.BasePath,
-		backupID: config.BackupProcessID,
+		backupID: timestamp,
 	}
 	for repo := range repositories {
 		if repo.IsEmpty() {
 			log.Printf("Skipping Repo[%s] because it's empty", repo.Name())
 			break
 		}
-		result := w.Clone(repo)
-		t.Add(result)
+		repositoryStats := w.Clone(repo)
+		reporter.TrackRepository(repositoryStats)
 	}
 	wg.Done()
-}
-
-type tracker struct {
-	mu      sync.Mutex
-	results []RepoStats
-}
-
-func (t *tracker) Add(result RepoStats) {
-	t.mu.Lock()
-	t.results = append(t.results, result)
-	t.mu.Unlock()
-}
-
-func (t *tracker) Stats() []RepoStats {
-	return t.results
 }

@@ -38,6 +38,8 @@ Resources:
           - !Ref BucketRegion
           - "-backupfolder"
           - "/work"
+          - "-namespace"
+          - !Ref MetricsNamespace
         Environment:
           - Name: GL_TOKEN
             Value: !Ref GitLabToken
@@ -109,3 +111,5 @@ Parameters:
     Type: List<AWS::EC2::Subnet::Id>
   SecurityGroups:
     Type: List<AWS::EC2::SecurityGroup::Id>
+  MetricsNamespace:
+    Type: String
