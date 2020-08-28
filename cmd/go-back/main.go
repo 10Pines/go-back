@@ -38,7 +38,7 @@ func main() {
 	glRepositories := gl.AllRepositories(GitLabOrganizationID)
 	log.Printf("Found %d repository in GitLab", len(glRepositories))
 
-	allRepositories := append(ghRepositories, glRepositories...)[:10]
+	allRepositories := append(ghRepositories, glRepositories...)
 
 	b := buildBackup(args, timestamp)
 	b.Process(allRepositories)
