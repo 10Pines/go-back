@@ -1,13 +1,17 @@
 package main
 
 import (
-	"go-re/internal/stats"
 	"log"
 	"os"
 	"time"
 
 	"go-re/internal/backup"
 	"go-re/internal/repository"
+	"go-re/internal/stats"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/cloudwatch"
 )
 
 type env struct {
@@ -30,8 +34,17 @@ func buildBackup(args appArgs, timestamp time.Time) backup.Backup {
 		Bucket:       args.Bucket,
 		BucketRegion: args.Region,
 	}
-	reporter := stats.NewReporter(config.Timestamp, args.Namespace)
+	cw := buildCloudwatchClient(args.MetricsRegion)
+	reporter := stats.NewReporter(config.Timestamp, args.MetricsNamespace, cw)
 	return backup.New(config, reporter)
+}
+
+func buildCloudwatchClient(region string) *cloudwatch.CloudWatch {
+	config := &aws.Config{
+		Region: aws.String(region),
+	}
+	mySession := session.Must(session.NewSession(config))
+	return cloudwatch.New(mySession)
 }
 
 func mustParseEnv() env {

@@ -14,11 +14,12 @@ const (
 )
 
 type appArgs struct {
-	WorkerCount  int    `default:"8" help:"Number of cloning workers"`
-	Bucket       string `arg:"required" help:"S3 bucket name where the backup is stored"`
-	Region       string `arg:"required" help:"S3 bucket region"`
-	BackupFolder string `arg:"required" help:"Backup will be locally stored inside this folder"`
-	Namespace    string `arg:"required" help:"Cloudwatch namespace where metrics will be published"`
+	WorkerCount      int    `default:"8" help:"Number of cloning workers"`
+	Bucket           string `arg:"required" help:"S3 bucket name where the backup is stored"`
+	Region           string `arg:"required" help:"S3 bucket region"`
+	BackupFolder     string `arg:"required" help:"Backup will be locally stored inside this folder"`
+	MetricsNamespace string `arg:"required" help:"Cloudwatch namespace where metrics will be published"`
+	MetricsRegion    string `arg:"required" help:"Cloudwatch region where metrics will be published"`
 }
 
 func main() {

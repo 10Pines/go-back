@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
 )
 
@@ -37,9 +36,9 @@ type (
 )
 
 // NewReporter returns a new instance
-func NewReporter(start time.Time, namespace string) *Reporter {
+func NewReporter(start time.Time, namespace string, cloudwatchClient *cloudwatch.CloudWatch) *Reporter {
 	return &Reporter{
-		cw:        cloudwatchClient(),
+		cw:        cloudwatchClient,
 		start:     start,
 		s:         stats{},
 		totalTime: 0,
@@ -129,9 +128,4 @@ func (r *Reporter) putCountAndTimeMetrics() {
 	if err != nil {
 		log.Fatal(err)
 	}
-}
-
-func cloudwatchClient() *cloudwatch.CloudWatch {
-	mySession := session.Must(session.NewSession())
-	return cloudwatch.New(mySession)
 }

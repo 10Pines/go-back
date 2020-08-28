@@ -38,8 +38,10 @@ Resources:
           - !Ref BucketRegion
           - "-backupfolder"
           - "/work"
-          - "-namespace"
+          - "-metricsnamespace"
           - !Ref MetricsNamespace
+          - "-metricsregion"
+          - !Ref "AWS::Region"
         Environment:
           - Name: GL_TOKEN
             Value: !Ref GitLabToken
