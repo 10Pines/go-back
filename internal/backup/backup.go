@@ -1,10 +1,11 @@
 package backup
 
 import (
-	"go-re/internal/stats"
 	"log"
 	"sync"
 	"time"
+
+	"go-re/internal/stats"
 
 	"go-re/internal/repository"
 	"go-re/internal/uploader"
@@ -77,7 +78,7 @@ func addWorker(repositories <-chan *repository.Repository, config Config, wg *sy
 	for repo := range repositories {
 		if repo.IsEmpty() {
 			log.Printf("Skipping Repo[%s] because it's empty", repo.Name())
-			break
+			continue
 		}
 		repositoryStats := w.Clone(repo)
 		reporter.TrackRepository(repositoryStats)

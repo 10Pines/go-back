@@ -55,7 +55,7 @@ func (r GitLab) fromGitlabProjects(gitLabProjects []*gl.Project) []*Repository {
 		foundRepositories = append(foundRepositories, &Repository{
 			name:  glProject.Name,
 			url:   glProject.HTTPURLToRepo,
-			empty: false,
+			empty: glProject.DefaultBranch == "",
 			auth:  &r.auth,
 			host:  "GitLab",
 		})
