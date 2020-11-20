@@ -18,11 +18,10 @@ import (
 
 type worker struct {
 	basePath string
-	backupID string
 }
 
 func (w worker) Clone(repository *repository.Repository) stats.RepoStats {
-	repositoryPath := path.Join(w.basePath, repository.Host(), w.backupID, repository.Name())
+	repositoryPath := path.Join(w.basePath, repository.Host(), repository.Name())
 	start := time.Now()
 	w.clone(repository, repositoryPath)
 	cloneTime := time.Since(start).Milliseconds()

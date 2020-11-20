@@ -28,14 +28,13 @@ func buildProviders() (repository.GitHub, repository.GitLab) {
 
 func buildBackup(args appArgs, timestamp time.Time) backup.Backup {
 	config := backup.Config{
-		Timestamp:    timestamp,
 		BasePath:     args.BackupFolder,
 		WorkerCount:  args.WorkerCount,
 		Bucket:       args.Bucket,
 		BucketRegion: args.Region,
 	}
 	cw := buildCloudwatchClient(args.MetricsRegion)
-	reporter := stats.NewReporter(config.Timestamp, args.MetricsNamespace, cw)
+	reporter := stats.NewReporter(timestamp, args.MetricsNamespace, cw)
 	return backup.New(config, reporter)
 }
 

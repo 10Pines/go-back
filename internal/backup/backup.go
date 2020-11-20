@@ -3,7 +3,6 @@ package backup
 import (
 	"log"
 	"sync"
-	"time"
 
 	"go-re/internal/stats"
 
@@ -21,7 +20,6 @@ type (
 
 	// Config contains Backup configuration
 	Config struct {
-		Timestamp    time.Time
 		BasePath     string
 		WorkerCount  int
 		Bucket       string
@@ -70,10 +68,8 @@ func makeWorkerPool(config Config, reporter *stats.Reporter) (*sync.WaitGroup, c
 
 func addWorker(repositories <-chan *repository.Repository, config Config, wg *sync.WaitGroup, reporter *stats.Reporter) {
 	wg.Add(1)
-	timestamp := config.Timestamp.Format(time.RFC3339)
 	w := worker{
 		basePath: config.BasePath,
-		backupID: timestamp,
 	}
 	for repo := range repositories {
 		if repo.IsEmpty() {
