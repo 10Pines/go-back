@@ -1,4 +1,5 @@
 repos
 .idea
 go-back
+!/cmd/*
 .DS_Store
