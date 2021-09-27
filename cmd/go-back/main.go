@@ -4,7 +4,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/10Pines/tracker/pkg/tracker"
+	"github.com/10Pines/tracker/v2/pkg/tracker"
 )
 
 // Well known values that identifies 10Pines repositories

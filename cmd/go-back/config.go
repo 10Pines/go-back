@@ -9,7 +9,7 @@ import (
 	"go-re/internal/repository"
 	"go-re/internal/stats"
 
-	"github.com/10Pines/tracker/pkg/tracker"
+	"github.com/10Pines/tracker/v2/pkg/tracker"
 	"github.com/alexflint/go-arg"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -29,7 +29,7 @@ type appArgs struct {
 	BackupFolder     string `arg:"required" help:"Backup will be locally stored inside this folder"`
 	MetricsNamespace string `arg:"required" help:"Cloudwatch namespace where metrics will be published"`
 	MetricsRegion    string `arg:"required" help:"Cloudwatch region where metrics will be published"`
-	TaskID           uint   `arg:"required" help:"Tracker task ID"`
+	TaskName         string `arg:"required" help:"Tracker task name"`
 }
 
 func mustParseArgs() appArgs {
@@ -53,7 +53,7 @@ func buildBackups(args appArgs, t *tracker.Tracker, timestamp time.Time) backup.
 		Tracker:      t,
 	}
 	cw := buildCloudwatchClient(args.MetricsRegion)
-	reporter := stats.NewReporter(timestamp, args.MetricsNamespace, cw, t, args.TaskID)
+	reporter := stats.NewReporter(timestamp, args.MetricsNamespace, cw, t, args.TaskName)
 	return backup.New(config, reporter)
 }
 

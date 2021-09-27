@@ -8,7 +8,7 @@ import (
 	"go-re/internal/stats"
 	"go-re/internal/uploader"
 
-	"github.com/10Pines/tracker/pkg/tracker"
+	"github.com/10Pines/tracker/v2/pkg/tracker"
 )
 
 type (

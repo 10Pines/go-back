@@ -1,5 +1,9 @@
-FROM golang:alpine
-WORKDIR /app
-COPY . /app/
+FROM golang:1.16-alpine3.14 as builder
+WORKDIR /var/build
+COPY . .
 RUN ./build
-ENTRYPOINT ["./go-back"]
+
+FROM alpine:3.14
+WORKDIR /app
+COPY --from=builder /var/build/go-back .
+CMD ["./go-back"]
