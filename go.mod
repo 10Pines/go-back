@@ -1,6 +1,6 @@
 module go-re
 
-go 1.16
+go 1.14
 
 require (
 	github.com/10Pines/tracker v0.0.0-20210927181928-1d2d3dc2e432
