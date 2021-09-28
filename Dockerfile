@@ -6,4 +6,4 @@ RUN ./build
 FROM alpine:3.14
 WORKDIR /app
 COPY --from=builder /var/build/go-back .
-CMD ["./go-back"]
+ENTRYPOINT ["./go-back"]
