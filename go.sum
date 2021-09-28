@@ -1,8 +1,8 @@
 cloud.google.com/go v0.34.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 github.com/10Pines/tracker v0.0.0-20210927181928-1d2d3dc2e432 h1:qi+2oJDzNVDksej4fLdjGoJVeDcqiSvngC9CJCgm3sk=
 github.com/10Pines/tracker v0.0.0-20210927181928-1d2d3dc2e432/go.mod h1:Sdfcxn3rIQIz/kQVwTGUrUFvD77y0/SmZeJkFoEs3dI=
-github.com/10Pines/tracker/v2 v2.0.1 h1:BBOzfWlT/oz8uqQixFU1gSZQiff66s9CM9n+VPDuQmE=
-github.com/10Pines/tracker/v2 v2.0.1/go.mod h1:Xvs/kf2miodAJyaR0Q3edVtdwCnDHA3++wWOV2sS8H4=
+github.com/10Pines/tracker/v2 v2.0.2 h1:7hm1Cke0dVfEElCvDTsHkEmijla0LmikWhOgzhz64nc=
+github.com/10Pines/tracker/v2 v2.0.2/go.mod h1:Xvs/kf2miodAJyaR0Q3edVtdwCnDHA3++wWOV2sS8H4=
 github.com/alcortesm/tgz v0.0.0-20161220082320-9c5fe88206d7 h1:uSoVVbwJiQipAclBbw+8quDsfcvFjOpI5iCf4p/cqCs=
 github.com/alcortesm/tgz v0.0.0-20161220082320-9c5fe88206d7/go.mod h1:6zEj6s6u/ghQa61ZWa/C2Aw3RkjiTBOix7dkqa1VLIs=
 github.com/alexflint/go-arg v1.3.0 h1:UfldqSdFWeLtoOuVRosqofU4nmhI1pYEbT4ZFS34Bdo=
