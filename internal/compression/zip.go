@@ -57,15 +57,24 @@ func ZipFolder(source, target string) error {
 			return nil
 		}
 
-		file, err := os.Open(filepath.Clean(path))
-		if err != nil {
-			return err
+		var reader io.Reader
+
+		if isSymlink(info) {
+			link, err := os.Readlink(path)
+			if err != nil {
+				return err
+			}
+			reader = strings.NewReader(link)
+		} else {
+			file, err := os.Open(filepath.Clean(path))
+			if err != nil {
+				return err
+			}
+			defer file.Close()
+			reader = file
 		}
-		_, err = io.Copy(writer, file)
-		if err != nil {
-			return err
-		}
-		return file.Close()
+		_, err = io.Copy(writer, reader)
+		return err
 	})
 	if err != nil {
 		return err
@@ -76,4 +85,8 @@ func ZipFolder(source, target string) error {
 		return err
 	}
 	return zipFile.Close()
+}
+
+func isSymlink(info os.FileInfo) bool {
+	return info.Mode()&os.ModeSymlink != 0
 }
