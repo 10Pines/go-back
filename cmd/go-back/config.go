@@ -9,7 +9,6 @@ import (
 	"go-re/internal/repository"
 	"go-re/internal/stats"
 
-	"github.com/10Pines/tracker/v2/pkg/tracker"
 	"github.com/alexflint/go-arg"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -17,9 +16,8 @@ import (
 )
 
 type env struct {
-	GitLabToken   string
-	GitHubToken   string
-	TrackerAPIKey string
+	GitLabToken string
+	GitHubToken string
 }
 
 type appArgs struct {
@@ -29,7 +27,6 @@ type appArgs struct {
 	BackupFolder     string `arg:"required" help:"Backup will be locally stored inside this folder"`
 	MetricsNamespace string `arg:"required" help:"Cloudwatch namespace where metrics will be published"`
 	MetricsRegion    string `arg:"required" help:"Cloudwatch region where metrics will be published"`
-	TaskName         string `arg:"required" help:"Tracker task name"`
 }
 
 func mustParseArgs() appArgs {
@@ -44,16 +41,15 @@ func buildProviders(environment env) (repository.GitHub, repository.GitLab) {
 	return gh, gl
 }
 
-func buildBackups(args appArgs, t *tracker.Tracker, timestamp time.Time) backup.Backup {
+func buildBackups(args appArgs, timestamp time.Time) backup.Backup {
 	config := backup.Config{
 		BasePath:     args.BackupFolder,
 		WorkerCount:  args.WorkerCount,
 		Bucket:       args.Bucket,
 		BucketRegion: args.Region,
-		Tracker:      t,
 	}
 	cw := buildCloudwatchClient(args.MetricsRegion)
-	reporter := stats.NewReporter(timestamp, args.MetricsNamespace, cw, t, args.TaskName)
+	reporter := stats.NewReporter(timestamp, args.MetricsNamespace, cw)
 	return backup.New(config, reporter)
 }
 
@@ -74,14 +70,9 @@ func mustParseEnv() env {
 	if !found {
 		log.Fatal("GL_TOKEN is missing")
 	}
-	trackerAPIKey, found := os.LookupEnv("TRACKER_API_KEY")
-	if !found {
-		log.Fatal("TRACKER_API_KEY is missing")
-	}
 
 	return env{
-		GitHubToken:   gitHubToken,
-		GitLabToken:   gitLabToken,
-		TrackerAPIKey: trackerAPIKey,
+		GitHubToken: gitHubToken,
+		GitLabToken: gitLabToken,
 	}
 }

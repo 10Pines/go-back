@@ -6,7 +6,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/10Pines/tracker/v2/pkg/tracker"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
 )
@@ -33,21 +32,17 @@ type (
 		mu        sync.Mutex
 		totalTime int64
 		namespace string
-		tracker   *tracker.Tracker
-		taskName  string
 	}
 )
 
 // NewReporter returns a new instance
-func NewReporter(start time.Time, namespace string, cloudwatchClient *cloudwatch.CloudWatch, t *tracker.Tracker, taskName string) *Reporter {
+func NewReporter(start time.Time, namespace string, cloudwatchClient *cloudwatch.CloudWatch) *Reporter {
 	return &Reporter{
 		cw:        cloudwatchClient,
 		start:     start,
 		s:         stats{},
 		totalTime: 0,
 		namespace: namespace,
-		tracker:   t,
-		taskName:  taskName,
 	}
 }
 
@@ -58,7 +53,6 @@ func (r *Reporter) Finished() {
 	}
 	r.computeElapsedTime()
 	r.report()
-	r.reportBackup()
 }
 
 func (r *Reporter) computeElapsedTime() {
@@ -135,13 +129,6 @@ func (r *Reporter) putCountAndTimeMetrics() {
 		Namespace: aws.String(r.namespace),
 	}
 	_, err := r.cw.PutMetricData(metricDataInput)
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
-func (r *Reporter) reportBackup() {
-	err := r.tracker.CreateBackup(r.taskName)
 	if err != nil {
 		log.Fatal(err)
 	}

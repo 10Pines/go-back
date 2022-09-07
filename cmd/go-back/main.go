@@ -3,8 +3,6 @@ package main
 import (
 	"log"
 	"time"
-
-	"github.com/10Pines/tracker/v2/pkg/tracker"
 )
 
 // Well known values that identifies 10Pines repositories
@@ -32,8 +30,6 @@ func main() {
 
 	allRepositories := append(ghRepositories, glRepositories...)
 
-	t := tracker.New(env.TrackerAPIKey)
-
-	b := buildBackups(args, t, timestamp)
+	b := buildBackups(args, timestamp)
 	b.Process(allRepositories)
 }

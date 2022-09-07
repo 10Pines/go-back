@@ -7,8 +7,6 @@ import (
 	"go-re/internal/repository"
 	"go-re/internal/stats"
 	"go-re/internal/uploader"
-
-	"github.com/10Pines/tracker/v2/pkg/tracker"
 )
 
 type (
@@ -25,7 +23,6 @@ type (
 		WorkerCount  int
 		Bucket       string
 		BucketRegion string
-		Tracker      *tracker.Tracker
 	}
 )
 
