@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/alexflint/go-arg v1.3.0
-	github.com/aws/aws-sdk-go v1.33.5
+	github.com/aws/aws-sdk-go v1.34.0
 	github.com/go-git/go-git/v5 v5.1.0
 	github.com/google/go-github/v32 v32.0.0
 	github.com/xanzy/go-gitlab v0.33.0
